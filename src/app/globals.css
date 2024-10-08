@@ -20,6 +20,28 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.row-box {
+  padding: 0.5rem;
+  border: 2px solid #4a4a4a; /* Slightly darker border for the box */
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.7); /* 3D shadow effect */
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  font-size: 1.5rem;
+  border-radius: 6px; /* Rounded corners for a modern look */
+  transition: all 0.2s ease-in-out; /* Smooth transition for interaction */
+}
+
+.row-box:focus {
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2), -4px -4px 8px rgba(255, 255, 255, 0.6); /* Slightly deeper shadow on focus */
+  outline: none; /* Remove default outline */
+  background: linear-gradient(145deg, #a6a6a6, #d5d5d5); /* Change background on focus */
+}
+
+.row-box:active {
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2), inset -2px -2px 4px rgba(255, 255, 255, 0.6); /* Inset shadow for a pressed effect */
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
