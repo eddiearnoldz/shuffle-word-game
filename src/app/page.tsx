@@ -62,7 +62,7 @@ useEffect(() => {
       text: "Shuffle Word",
       fontSize: 25,
       duration: 2,
-      ease: "elastic.out(1, 0.3)",
+      ease: "power2.in",
       onStart: () => {
         title.current!.textContent = "wsufleo rdfh"; // Starting randomized text
       }
@@ -77,15 +77,17 @@ useEffect(() => {
     displayWord(rowFive, endWord);
   }, []);
 
-  const displayWord = (rowRef, word: string ) => {
+  const displayWord = (rowRef: React.RefObject<HTMLDivElement>, word: string ) => {
     // Split the word into individual characters
     const letters = word.split('');
-    const boxes = rowRef.current.children;
+    const boxes = rowRef.current?.children;
 
     // Populate each box with the corresponding letter
-    letters.forEach((letter, index) => {
-      boxes[index].textContent = letter;
-    });
+    if (boxes && boxes.length === letters.length) {
+      letters.forEach((letter, index) => {
+        boxes[index].textContent = letter;
+      });
+    }
   };
 
   const formatTime = (seconds: number) => {
