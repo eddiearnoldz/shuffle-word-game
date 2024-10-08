@@ -59,13 +59,12 @@ export default function Home() {
 useEffect(() => {
   if (title.current) {
     gsap.to(title.current, {
-      text: "Shuffle Word",
-      fontSize: 25,
+      text: "SHUFFLE WORD",
       duration: 2,
+      stagger: {
+        from: "start",
+        amount: 0.1},
       ease: "power2.in",
-      onStart: () => {
-        title.current!.textContent = "wsufleo rdfh"; // Starting randomized text
-      }
     });
   }
 }, []);
@@ -344,7 +343,7 @@ const handleInputChange = async (
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-start justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center max-w-[400px]">
-       <h1 className='text-yellow-300' ref={title}>wsufleo rdfh</h1>
+       <h1 className='text-yellow-300' ref={title}>WSUFLEO RDFH</h1>
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
             Turn the START word at the top into the END word at the bottom in 4 moves.
