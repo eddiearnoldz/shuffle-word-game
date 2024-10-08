@@ -19,7 +19,7 @@ export default function Home() {
   const [boardIsClear, setBoardIsClear] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [activeRow, setActiveRow] = useState(1);
-  const [changedLetterIndices, setChangedLetterIndices] = useState([null, null, null, null]);
+  const [changedLetterIndices, setChangedLetterIndices] = useState<(number | null)[]>([null, null, null, null]);
 
   const [timeElapsed, setTimeElapsed] = useState(0); // Store time in seconds
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -130,17 +130,27 @@ const isWordValid = async (word: string): Promise<boolean> => {
   }
 };
 
-const highlightChangedLetter = (rowRef, currentWord: string, previousWord: string, rowIndex: number) => {
+const highlightChangedLetter = (
+  rowRef: React.RefObject<HTMLDivElement>,
+  currentWord: string,
+  previousWord: string,
+  rowIndex: number
+) => {
   // Find the index of the changed letter
-  const changedIndex = currentWord.split('').findIndex((letter, index) => letter !== previousWord[index]);
-  
-  if (changedIndex !== -1) {
-    // Change the background color of the changed letter in the previous row to orange
-    const currentRowBoxes: HTMLInputElement[] = Array.from(rowRef.current.children);
-    currentRowBoxes[changedIndex].style.backgroundColor = 'orange';
+  const changedIndex = currentWord.split('').findIndex(
+    (letter, index) => letter !== previousWord[index]
+  );
+
+  if (changedIndex !== -1 && rowRef.current) {
+    // Ensure rowRef.current is not null
+    const currentRowBoxes = Array.from(rowRef.current.children) as HTMLInputElement[]; // Cast to HTMLInputElement[]
+    
+    if (currentRowBoxes[changedIndex]) {
+      currentRowBoxes[changedIndex].style.backgroundColor = 'orange';
+    }
 
     // Update the changedLetterIndices array
-    setChangedLetterIndices(prev => {
+    setChangedLetterIndices((prev) => {
       const newIndices = [...prev];
       newIndices[rowIndex - 2] = changedIndex; // Store the changed letter index for the row
       console.log(newIndices);
@@ -150,18 +160,22 @@ const highlightChangedLetter = (rowRef, currentWord: string, previousWord: strin
 };
 
 
-const handleInputDelete = (rowRef, event) => {
-  const inputBoxes: HTMLInputElement[] = Array.from(rowRef.current.querySelectorAll('input'));
-  const currentIndex = parseInt(event.target.dataset.index);
 
-  // Handle backspace key press
-  if (event.key === 'Backspace' && event.target.value === '' && currentIndex > 0) {
-    const prevInput = inputBoxes[currentIndex - 1];
-    if (prevInput) {
-      prevInput.focus(); // Move to the previous input box
+const handleInputDelete = (rowRef: React.RefObject<HTMLDivElement>, event: React.KeyboardEvent<HTMLInputElement>) => {
+  if(rowRef.current){
+    const inputBoxes: HTMLInputElement[] = Array.from(rowRef.current.querySelectorAll('input'));
+    const target = event.currentTarget as HTMLInputElement;
+    const currentIndex = parseInt(target.dataset.index || "0");
+
+    // Handle backspace key press
+    if (event.key === 'Backspace' && target.value === '' && currentIndex > 0) {
+      const prevInput = inputBoxes[currentIndex - 1];
+      if (prevInput) {
+        prevInput.focus(); // Move to the previous input box
+      }
+      setShowModal(false);
+      unsetHighlightErrorRow(inputBoxes);
     }
-    setShowModal(false);
-    unsetHighlightErrorRow(inputBoxes);
   }
 };
 
@@ -171,93 +185,96 @@ const handleInputChange = async (
   rowIndex: number,
   event: React.ChangeEvent<HTMLInputElement>
 ) => {
-  const inputBoxes = Array.from(rowRef.current.querySelectorAll('input'));
-  const currentIndex = parseInt(event.target.dataset.index);
 
-  // Move to the next input box if input is not empty and there is a next box
-  if (event.target.value !== '' && currentIndex < 4) {
-    const nextInput = inputBoxes[currentIndex + 1];
-    if (nextInput) {
-      nextInput.focus();
+  if(rowRef.current) {
+    const inputBoxes = Array.from(rowRef.current.querySelectorAll('input'));
+    const currentIndex = parseInt(event.target.dataset.index || '0');
+
+    // Move to the next input box if input is not empty and there is a next box
+    if (event.target.value !== '' && currentIndex < 4) {
+      const nextInput = inputBoxes[currentIndex + 1];
+      if (nextInput) {
+        nextInput.focus();
+      }
     }
-  }
 
-  // Update the board clear status
-  updateBoardClearStatus();
+    // Update the board clear status
+    updateBoardClearStatus();
 
-  // Check if all 5 input boxes in this row have one letter each
-  const allFilled = inputBoxes.every((input) => input.value.length === 1);
-  if (allFilled) {
-    const currentWord = inputBoxes.map((input) => input.value).join('').toLowerCase();
+    // Check if all 5 input boxes in this row have one letter each
+    const allFilled = inputBoxes.every((input) => input.value.length === 1);
+    if (allFilled) {
+      const currentWord = inputBoxes.map((input) => input.value).join('').toLowerCase();
 
-    // Get the previous row's word
-    const previousRowRef = getRowRef(rowIndex - 2);
+      // Get the previous row's word
+      const previousRowRef = getRowRef(rowIndex - 2);
 
-    if (previousRowRef && previousRowRef.current) {
-      const previousWord: string = Array.from(previousRowRef.current.querySelectorAll('div, input'))
-        .map((box) => box.textContent || box.value)
-        .join('')
-        .toLowerCase();
+      if (previousRowRef && previousRowRef.current) {
+        const previousWord: string = Array.from(previousRowRef.current.querySelectorAll('div, input'))
+          .map((box) => box.textContent || (box as HTMLInputElement).value)
+          .join('')
+          .toLowerCase();
 
-        if( previousWord === currentWord) {
+          if( previousWord === currentWord) {
+            setShowModal(true); // Show modal for multiple letters changed
+            setInvalidRow(rowIndex);
+            setErrorMessage("You didn't change any letters");
+            setHighlightErrorRow(inputBoxes);
+            return; // Exit the function early
+          }
+
+        // Check if only one letter has changed
+        if (!hasOneLetterChanged(currentWord, previousWord)) {
           setShowModal(true); // Show modal for multiple letters changed
           setInvalidRow(rowIndex);
-          setErrorMessage("You didn't change any letters");
+          setErrorMessage('You can only change one letter at a time.');
           setHighlightErrorRow(inputBoxes);
           return; // Exit the function early
         }
 
-      // Check if only one letter has changed
-      if (!hasOneLetterChanged(currentWord, previousWord)) {
-        setShowModal(true); // Show modal for multiple letters changed
+        highlightChangedLetter(rowRef, currentWord, previousWord, rowIndex);
+      }
+
+      // Check if the word is valid (using the API or word list)
+      const valid = await isWordValid(currentWord);
+
+      if (!valid) {
+        setShowModal(true); // Show modal if word is invalid
         setInvalidRow(rowIndex);
-        setErrorMessage('You can only change one letter at a time.');
+        setErrorMessage(`${currentWord} is not in the english dictionary.`);
         setHighlightErrorRow(inputBoxes);
-        return; // Exit the function early
-      }
+      } else {
+        // Word is valid
+        if (rowIndex < 5) {
+          // Move to the next row and focus its first input
+          setActiveRow(rowIndex + 1);
 
-      highlightChangedLetter(rowRef, currentWord, previousWord, rowIndex);
-    }
-
-    // Check if the word is valid (using the API or word list)
-    const valid = await isWordValid(currentWord);
-
-    if (!valid) {
-      setShowModal(true); // Show modal if word is invalid
-      setInvalidRow(rowIndex);
-      setErrorMessage(`${currentWord} is not in the english dictionary.`);
-      setHighlightErrorRow(inputBoxes);
-    } else {
-      // Word is valid
-      if (rowIndex < 5) {
-        // Move to the next row and focus its first input
-        setActiveRow(rowIndex + 1);
-
-        const nextRowRef = getRowRef(rowIndex);
-        if (nextRowRef?.current) {
-          setTimeout(() => {
-            const nextRowFirstInput = nextRowRef.current.querySelector('input');
-            if (nextRowFirstInput) {
-              nextRowFirstInput.focus();
-            }
-          }, 100); // Small delay to ensure focus happens after row change
-        }
-      }
-
-      // Check if we are on the last row and the word matches the endWord
-      if (rowIndex === 5 && currentWord.toLowerCase() === endWord.toLowerCase()) {
-        setShowModal(true); // Show "Puzzle Complete" modal
-        setInvalidRow(null);
-        setErrorMessage(`Puzzle Completed in ${formatTime(timeElapsed)}!`);
-        const focusedInput = document.querySelector('input:focus');
-        if (focusedInput) {
-          focusedInput.blur(); // Remove focus from the last input field
+          const nextRowRef = getRowRef(rowIndex);
+          if (nextRowRef && nextRowRef?.current) {
+            setTimeout(() => {
+              const nextRowFirstInput = nextRowRef.current?.querySelector('input');
+              if (nextRowFirstInput) {
+                nextRowFirstInput.focus();
+              }
+            }, 100); // Small delay to ensure focus happens after row change
+          }
         }
 
-        if (intervalIdRef.current) {
-          clearInterval(intervalIdRef.current);
-          intervalIdRef.current = null;
-          localStorage.removeItem('gameTime');
+        // Check if we are on the last row and the word matches the endWord
+        if (rowIndex === 5 && currentWord.toLowerCase() === endWord.toLowerCase()) {
+          setShowModal(true); // Show "Puzzle Complete" modal
+          setInvalidRow(null);
+          setErrorMessage(`Puzzle Completed in ${formatTime(timeElapsed)}!`);
+          const focusedInput = document.querySelector('input:focus');
+          if (focusedInput) {
+            (focusedInput as HTMLInputElement).blur();
+          }
+
+          if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+            localStorage.removeItem('gameTime');
+          }
         }
       }
     }
@@ -283,10 +300,10 @@ const handleInputChange = async (
   };
   
 
-  const handleModalDismiss = (rowRef) => {
+  const handleModalDismiss = (rowRef: React.RefObject<HTMLDivElement>) => {
     setShowModal(false);
     // Clear the invalid row's inputs
-    if (invalidRow !== null && rowRef) {
+    if (invalidRow !== null && rowRef.current) {
       const inputBoxes: HTMLInputElement[] = Array.from(rowRef.current.querySelectorAll('input')); // Get all input boxes in the row
       inputBoxes.forEach(input => input.value = ''); // Clear the input values
       inputBoxes[0].focus(); // Set focus to the first input again
@@ -298,22 +315,28 @@ const handleInputChange = async (
   const clearBoard = () => {
     // Clear all inputs in the rows
     [rowTwo, rowThree, rowFour, rowFive].forEach(row => {
-      const inputBoxes: HTMLInputElement[] = Array.from(row.current.querySelectorAll('input'));
-      inputBoxes.forEach(input => {input.value = ''; input.style.backgroundColor = '#94a3b8'}); // Clear all input fields
+      if(row.current) {
+        const inputBoxes: HTMLInputElement[] = Array.from(row.current.querySelectorAll('input'));
+        inputBoxes.forEach(input => {input.value = ''; input.classList.add("bg-slate-400")}); // Clear all input fields
+      }
     });
     setShowModal(false); // Hide modal if open
     setInvalidRow(null); // Reset invalid row state
     setBoardIsClear(true);
     setActiveRow(1);
-    setChangedLetterIndices([null, null, null, null]); 
-    document.querySelector(".shuffle-row input").focus();
+    setChangedLetterIndices([null, null, null, null]);
+    const firstInput = document.querySelector(".shuffle-row input") as HTMLInputElement;
+  
+    if(firstInput) firstInput.focus();
   };
 
   const updateBoardClearStatus = () => {
     const allRows = [rowTwo, rowThree, rowFour];
     const boardHasContent = allRows.some(row => {
-      const inputBoxes = Array.from(row.current.querySelectorAll('input'));
-      return inputBoxes.some(input => input.value.length > 0);
+      if(row.current) {
+        const inputBoxes = Array.from(row.current.querySelectorAll('input'));
+        return inputBoxes.some(input => input.value.length > 0);
+      }
     });
     setBoardIsClear(!boardHasContent); // If no content in board, set it as clear
   };
@@ -354,7 +377,7 @@ const handleInputChange = async (
                   minLength={1}
                   data-index={index}
                   className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
-                  onInput={(e) => handleInputChange(rowTwo, 2, e)}
+                  onChange={(e) => handleInputChange(rowTwo, 2, e)}
                   onKeyDown={(e) => handleInputDelete(rowTwo, e)}
                   disabled={activeRow < 1}
                 />
@@ -369,7 +392,7 @@ const handleInputChange = async (
                   minLength={1}
                   data-index={index}
                   className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
-                  onInput={(e) => handleInputChange(rowThree, 3, e)}
+                  onChange={(e) => handleInputChange(rowThree, 3, e)}
                   onKeyDown={(e) => handleInputDelete(rowThree, e)}
                   disabled={activeRow < 2}
                 />
@@ -384,7 +407,7 @@ const handleInputChange = async (
                   minLength={1}
                   data-index={index}
                   className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
-                  onInput={(e) => handleInputChange(rowFour, 4, e)}
+                  onChange={(e) => handleInputChange(rowFour, 4, e)}
                   onKeyDown={(e) => handleInputDelete(rowFour, e)}
                   disabled={activeRow < 3}
                 />
@@ -399,7 +422,7 @@ const handleInputChange = async (
                   minLength={1}
                   data-index={index}
                   className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
-                  onInput={(e) => handleInputChange(rowFive, 5, e)}
+                  onChange={(e) => handleInputChange(rowFive, 5, e)}
                   onKeyDown={(e) => handleInputDelete(rowFive, e)}
                   disabled={activeRow < 4}
                 />
@@ -413,7 +436,16 @@ const handleInputChange = async (
           <div className="modal self-center">
             <div className="modal-content flex flex-col ">
               <p>{errorMessage}</p>
-              <button className="border bg-white text-black text-sxl text-center border-s-black rounded-md px-4" onClick={() => handleModalDismiss(getRowRef(invalidRow - 1))}>Dismiss</button>
+              <button className={`bg-white text-black text-sxl text-center border-s-black rounded-2xl px-4 w-fit m-auto mt-4 ${activeRow === 5 ? 'hidden' : ''}`}
+               onClick={() => {
+                if (invalidRow !== null) {
+                  const rowRef = getRowRef(invalidRow - 1);
+                  if (rowRef && rowRef.current) {
+                    handleModalDismiss(rowRef);
+                  }
+                }
+              }}
+              >Dismiss</button>
             </div>
           </div>
         )}
