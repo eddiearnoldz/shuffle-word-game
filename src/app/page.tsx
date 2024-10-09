@@ -20,6 +20,7 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState("");
   const [activeRow, setActiveRow] = useState(1);
   const [changedLetterIndices, setChangedLetterIndices] = useState<(number | null)[]>([null, null, null, null]);
+  const [gameComplete, setGameComplete] = useState(false);
 
   const [timeElapsed, setTimeElapsed] = useState(0); // Store time in seconds
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -274,6 +275,7 @@ const handleInputChange = async (
             intervalIdRef.current = null;
             localStorage.removeItem('gameTime');
           }
+          setGameComplete(true);
         }
       }
     }
@@ -378,7 +380,7 @@ const handleInputChange = async (
                   className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowTwo, 2, e)}
                   onKeyDown={(e) => handleInputDelete(rowTwo, e)}
-                  disabled={activeRow < 1}
+                  disabled={activeRow < 1 || gameComplete}
                 />
               ))}
             </div>
@@ -393,7 +395,7 @@ const handleInputChange = async (
                   className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowThree, 3, e)}
                   onKeyDown={(e) => handleInputDelete(rowThree, e)}
-                  disabled={activeRow < 2}
+                  disabled={activeRow < 2 || gameComplete}
                 />
               ))}
             </div>
@@ -408,7 +410,7 @@ const handleInputChange = async (
                   className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowFour, 4, e)}
                   onKeyDown={(e) => handleInputDelete(rowFour, e)}
-                  disabled={activeRow < 3}
+                  disabled={activeRow < 3 || gameComplete}
                 />
               ))}
             </div>
@@ -423,7 +425,7 @@ const handleInputChange = async (
                   className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowFive, 5, e)}
                   onKeyDown={(e) => handleInputDelete(rowFive, e)}
-                  disabled={activeRow < 4}
+                  disabled={activeRow < 4 || gameComplete}
                 />
               ))}
             </div>
@@ -451,12 +453,15 @@ const handleInputChange = async (
 
         <div className="flex gap-4 items-center flex-col sm:flex-row self-center">
           <button
-            className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5  ${boardIsClear ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#383838] dark:hover:bg-[#ccc]'}`}
+            className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5  ${boardIsClear ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#383838] dark:hover:bg-[#ccc]'} ${gameComplete ? 'hidden' : ''}`}
             onClick={clearBoard}
             disabled={boardIsClear}
           >
             Clear Board
           </button>
+          <h3
+          className={`${gameComplete ? '' : 'hidden'} text-yellow-400`}
+          >Come back tomorrow for another round. Everyday I'm shuffling!</h3>
         </div>
       </main>
     </div>
