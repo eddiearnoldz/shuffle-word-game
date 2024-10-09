@@ -342,7 +342,7 @@ const handleInputChange = async (
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-start justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center max-w-[400px]">
+      <main className="flex flex-col gap-8 row-start-2 items-center max-w-[400px] w-[90%]">
        <h1 className='text-yellow-300' ref={title}>WSUFLEO RDFH</h1>
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
@@ -357,7 +357,7 @@ const handleInputChange = async (
         <h4 className="text-xl">END WORD: <span className='text-green-400'>{answerSets[0].end.toUpperCase()}</span></h4>
         </div>
         <p>Time Elapsed: {formatTime(timeElapsed)}</p> {/* Timer display */}
-        <div className="flex gap-4 items-center flex-col sm:flex-row m-auto min-w-[280px] w-[90vw] max-w-[400px]">
+        <div className="flex gap-4 items-center flex-col sm:flex-row m-auto w-full max-w-[400px]">
           <div className="shuffle-grid grid grid-cols-1 grid-rows-5">
             <div ref={rowOne} className="shuffle-row w-full flex">
               {Array(5).fill(null).map((_, index) => (
