@@ -191,6 +191,11 @@ const handleInputDelete = (rowRef: React.RefObject<HTMLDivElement>, event: React
       }
       setShowModal(false);
       unsetHighlightErrorRow(inputBoxes);
+    } else {
+      const charCode = event.key.charCodeAt(0);
+      if (!/[a-zA-Z]/.test(event.key)) {
+        event.preventDefault(); // Prevent non-alphabetic input
+      }
     }
   }
 };
@@ -382,7 +387,7 @@ const handleInputChange = async (
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-start justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center max-w-[400px] w-[90%]">
-       <h1 className='text-yellow-300' ref={title}>WSUFLEO RDFH</h1>
+       <h1 className='text-orange-300' ref={title}>WSUFLEO RDFH</h1>
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
             Turn the START word at the top into the END word at the bottom in 4 moves.
@@ -395,14 +400,14 @@ const handleInputChange = async (
         <h4 className="text-xl">START WORD: <span className='text-green-400'>{start}</span></h4>
         <h4 className="text-xl">END WORD: <span className='text-green-400'>{end}</span></h4>
         </div>
-        <p>Time Elapsed: {formatTime(timeElapsed)}</p> {/* Timer display */}
+        <p>Time Elapsed: <span className="neon-clock text-green-400">{formatTime(timeElapsed)}</span></p> {/* Timer display */}
         <div className="flex gap-4 items-center flex-col sm:flex-row m-auto w-full max-w-[400px]">
           <div className="shuffle-grid grid grid-cols-1 grid-rows-5">
             <div ref={rowOne} className="shuffle-row w-full flex">
               {Array(5).fill(null).map((_, index) => (
                 <div
                   key={index}
-                  className="row-box p-2 border border-s-black bg-green-400 w-[20%] text-center text-2xl extrabold capitalize"
+                  className="row-box p-2 border border-s-black bg-green-400 w-[20%] text-center text-2xl font-extrabold capitalize"
                 ></div>
               ))}
             </div>
@@ -414,7 +419,7 @@ const handleInputChange = async (
                   maxLength={1}
                   minLength={1}
                   data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
+                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowTwo, 2, e)}
                   onKeyDown={(e) => handleInputDelete(rowTwo, e)}
                   disabled={activeRow < 1 || gameComplete}
@@ -429,7 +434,7 @@ const handleInputChange = async (
                   maxLength={1}
                   minLength={1}
                   data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
+                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowThree, 3, e)}
                   onKeyDown={(e) => handleInputDelete(rowThree, e)}
                   disabled={activeRow < 2 || gameComplete}
@@ -444,7 +449,7 @@ const handleInputChange = async (
                   maxLength={1}
                   minLength={1}
                   data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
+                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowFour, 4, e)}
                   onKeyDown={(e) => handleInputDelete(rowFour, e)}
                   disabled={activeRow < 3 || gameComplete}
@@ -459,7 +464,7 @@ const handleInputChange = async (
                   maxLength={1}
                   minLength={1}
                   data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center extrabold text-2xl  focus:bg-slate-600 capitalize"
+                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowFive, 5, e)}
                   onKeyDown={(e) => handleInputDelete(rowFive, e)}
                   disabled={activeRow < 4 || gameComplete}
@@ -474,7 +479,12 @@ const handleInputChange = async (
           <div className="modal self-center">
             <div className="modal-content flex flex-col ">
               <p>{errorMessage}</p>
-              <button className={`bg-white text-black text-sxl text-center border-s-black rounded-2xl px-4 w-fit m-auto mt-4 ${activeRow === 5 ? 'hidden' : ''}`}
+              <button        className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 font-extrabold  w-fit m-auto mt-5
+          ${boardIsClear ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#383838] dark:hover:bg-[#ccc]'} 
+          ${gameComplete ? 'hidden' : ''} 
+          ${!boardIsClear ? 'glow-effect' : ''}
+          ${activeRow === 5 ? 'hidden' : ''}`} 
+        
                onClick={() => {
                 if (invalidRow !== null) {
                   const rowRef = getRowRef(invalidRow - 1);
@@ -489,24 +499,29 @@ const handleInputChange = async (
         )}
 
         <div className="flex gap-4 items-center flex-col sm:flex-row self-center">
+          <div className="flex gap-3 items-center justify-center">
           <button
-            className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5  ${boardIsClear ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#383838] dark:hover:bg-[#ccc]'} ${gameComplete ? 'hidden' : ''}`}
-            onClick={clearBoard}
-            disabled={boardIsClear}
-          >
-            Clear Board
-          </button>
-          <h3
-          className={`${gameComplete ? '' : 'hidden'} text-yellow-400`}
-          >Come back tomorrow for another round. Everyday I'm shuffling!</h3>
-        </div>
-
+          className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 font-extrabold
+          ${boardIsClear ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#383838] dark:hover:bg-[#ccc]'} 
+          ${gameComplete ? 'hidden' : ''} 
+          ${!boardIsClear ? 'glow-effect' : ''}`} 
+          onClick={clearBoard}
+          disabled={boardIsClear}
+        >
+          Clear Board
+        </button>
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+          className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-orange-300 text-background gap-2 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 font-extrabold   ${!boardIsClear ? 'glow-effect' : ''}`}
           onClick={resetGameForTesting}
         >
           Next Game (Test Mode)
         </button>
+          </div>
+
+          <h3
+          className={`${gameComplete ? '' : 'hidden'} text-yellow-400`}
+          >Come back tomorrow for another round. Everyday I'm shuffling!</h3>
+        </div>
       </main>
     </div>
   );

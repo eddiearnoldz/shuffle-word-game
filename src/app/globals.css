@@ -35,6 +35,56 @@ body {
   box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2), inset -2px -2px 4px rgba(255, 255, 255, 0.6); /* Inset shadow for a pressed effect */
 }
 
+.glow-effect {
+  box-shadow: 0 0 10px rgba(255, 255, 0, 0.7), 0 0 30px rgba(255, 255, 0, 0.5), 0 0 45px rgba(255, 255, 0, 0.3); /* Glowing effect */
+  text-shadow: 0 0 5px rgba(255, 255, 0, 0.8); /* Backlit effect on the text */
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 15px rgba(255, 255, 0, 1), 0 0 40px rgba(255, 255, 0, 0.8), 0 0 60px rgba(255, 255, 0, 0.5); /* Stronger glow on hover */
+  transform: scale(1.05); /* Slightly enlarges the button on hover */
+}
+
+.neon-clock {
+  font-size: 2rem; /* Adjust size as needed */
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.8),
+               0 0 20px rgba(57, 255, 20, 0.6),
+               0 0 30px rgba(57, 255, 20, 0.5),
+               0 0 40px rgba(57, 255, 20, 0.4),
+               0 0 50px rgba(57, 255, 20, 0.3),
+               0 0 60px rgba(57, 255, 20, 0.2);
+  animation: neon-flicker 3s infinite alternate;
+}
+
+@keyframes neon-flicker {
+  0% {
+    text-shadow: 0 0 10px rgba(57, 255, 20, 0.8),
+                 0 0 20px rgba(57, 255, 20, 0.6),
+                 0 0 30px rgba(57, 255, 20, 0.5),
+                 0 0 40px rgba(57, 255, 20, 0.4),
+                 0 0 50px rgba(57, 255, 20, 0.3),
+                 0 0 60px rgba(57, 255, 20, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(57, 255, 20, 0.6),
+                 0 0 20px rgba(57, 255, 20, 0.4),
+                 0 0 30px rgba(57, 255, 20, 0.3),
+                 0 0 40px rgba(57, 255, 20, 0.2),
+                 0 0 50px rgba(57, 255, 20, 0.1);
+  }
+  100% {
+    text-shadow: 0 0 10px rgba(57, 255, 20, 0.8),
+                 0 0 20px rgba(57, 255, 20, 0.6),
+                 0 0 30px rgba(57, 255, 20, 0.5),
+                 0 0 40px rgba(57, 255, 20, 0.4),
+                 0 0 50px rgba(57, 255, 20, 0.3),
+                 0 0 60px rgba(57, 255, 20, 0.3);
+  }
+}
+
+
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
