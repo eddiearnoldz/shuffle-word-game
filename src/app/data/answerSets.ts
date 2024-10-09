@@ -9,7 +9,7 @@ export const answerSets = [
   },
   {
     start: 'steer',
-    end: 'steak'
+    end: 'speak'
   },
   {
     start: 'water',

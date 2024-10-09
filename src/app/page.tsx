@@ -159,22 +159,21 @@ const highlightChangedLetter = (
   if (changedIndex !== -1 && rowRef.current) {
     // Ensure rowRef.current is not null
     const currentRowBoxes = Array.from(rowRef.current.children) as HTMLInputElement[]; // Cast to HTMLInputElement[]
-    
+
     if (currentRowBoxes[changedIndex]) {
-      currentRowBoxes[changedIndex].classList.add('bg-orange-300');
+      // Add the orange background with !important to ensure it takes effect
+      currentRowBoxes[changedIndex].style.backgroundColor = 'rgb(253 186 116)';
+      currentRowBoxes[changedIndex].style.backgroundColor = 'rgb(253 186 116)'; // Ensures inline style overrides
     }
 
     // Update the changedLetterIndices array
     setChangedLetterIndices((prev) => {
       const newIndices = [...prev];
       newIndices[rowIndex - 2] = changedIndex; // Store the changed letter index for the row
-      console.log(newIndices);
       return newIndices;
     });
   }
 };
-
-
 
 const handleInputDelete = (rowRef: React.RefObject<HTMLDivElement>, event: React.KeyboardEvent<HTMLInputElement>) => {
   if(rowRef.current){
@@ -184,7 +183,7 @@ const handleInputDelete = (rowRef: React.RefObject<HTMLDivElement>, event: React
 
     // Handle backspace key press
     if (event.key === 'Backspace' && target.value === '' && currentIndex > 0) {
-      inputBoxes[currentIndex].classList.remove("bg-orange-300")
+      inputBoxes[currentIndex].style.backgroundColor = '';
       const prevInput = inputBoxes[currentIndex - 1];
       if (prevInput) {
         prevInput.focus(); // Move to the previous input box
@@ -199,7 +198,6 @@ const handleInputDelete = (rowRef: React.RefObject<HTMLDivElement>, event: React
     }
   }
 };
-
 
 const handleInputChange = async (
   rowRef: React.RefObject<HTMLDivElement>,
@@ -303,86 +301,106 @@ const handleInputChange = async (
   }
 };
   
-  const getRowRef = (index: Number) => {
-    // Function to return the appropriate row ref based on the index
-    switch(index) {
-      case 0: 
-        return rowOne;
-      case 1:
-        return rowTwo;
-      case 2:
-        return rowThree;
-      case 3:
-        return rowFour;
-      case 4:
-        return rowFive;
-      default:
-        return null;
-    }
-  };
+const getRowRef = (index: Number) => {
+  // Function to return the appropriate row ref based on the index
+  switch(index) {
+    case 0: 
+      return rowOne;
+    case 1:
+      return rowTwo;
+    case 2:
+      return rowThree;
+    case 3:
+      return rowFour;
+    case 4:
+      return rowFive;
+    default:
+      return null;
+  }
+};
   
+const handleModalDismiss = (rowRef: React.RefObject<HTMLDivElement>) => {
+  setShowModal(false);
+  // Clear the invalid row's inputs
+  if (invalidRow !== null && rowRef.current) {
+    const inputBoxes: HTMLInputElement[] = Array.from(rowRef.current.querySelectorAll('input')); // Get all input boxes in the row
+    inputBoxes.forEach(input => input.value = ''); // Clear the input values
+    inputBoxes[0].focus(); // Set focus to the first input again
+    unsetHighlightErrorRow(inputBoxes);
 
-  const handleModalDismiss = (rowRef: React.RefObject<HTMLDivElement>) => {
-    setShowModal(false);
-    // Clear the invalid row's inputs
-    if (invalidRow !== null && rowRef.current) {
-      const inputBoxes: HTMLInputElement[] = Array.from(rowRef.current.querySelectorAll('input')); // Get all input boxes in the row
-      inputBoxes.forEach(input => input.value = ''); // Clear the input values
-      inputBoxes[0].focus(); // Set focus to the first input again
-      unsetHighlightErrorRow(inputBoxes);
+    setChangedLetterIndices((prev) => {
+      const newIndices = [...prev];
+      const rowIndex = invalidRow  - 2 ;
+      console.log("rowIndex", rowIndex);
+      newIndices[rowIndex] = null;
+      console.log("newIndices", newIndices)
+      return newIndices;
+    });
+  }
+  setInvalidRow(null);
+};
 
-      setChangedLetterIndices((prev) => {
-        const newIndices = [...prev];
-        const rowIndex = invalidRow  - 2 ;
-        console.log("rowIndex", rowIndex);
-        newIndices[rowIndex] = null;
-        console.log("newIndices", newIndices)
-        return newIndices;
-      });
+const clearBoard = () => {
+  // Clear all inputs in the rows
+  [rowTwo, rowThree, rowFour, rowFive].forEach(row => {
+    if(row.current) {
+      const inputBoxes: HTMLInputElement[] = Array.from(row.current.querySelectorAll('input'));
+      inputBoxes.forEach(input => {input.value = ''; input.classList.add("bg-slate-400"); input.style.backgroundColor = ''});
     }
-    setInvalidRow(null);
-  };
+  });
+  setShowModal(false); // Hide modal if open
+  setInvalidRow(null); // Reset invalid row state
+  setBoardIsClear(true);
+  setActiveRow(1);
+  setChangedLetterIndices([null, null, null, null]);
+  const firstInput = document.querySelector(".shuffle-row input") as HTMLInputElement;
 
-  const clearBoard = () => {
-    // Clear all inputs in the rows
-    [rowTwo, rowThree, rowFour, rowFive].forEach(row => {
-      if(row.current) {
-        const inputBoxes: HTMLInputElement[] = Array.from(row.current.querySelectorAll('input'));
-        inputBoxes.forEach(input => {input.value = ''; input.classList.add("bg-slate-400"); input.classList.remove("bg-orange-300")});
-      }
+  if(firstInput) firstInput.focus();
+};
+
+const updateBoardClearStatus = () => {
+  const allRows = [rowTwo, rowThree, rowFour];
+  const boardHasContent = allRows.some(row => {
+    if(row.current) {
+      const inputBoxes = Array.from(row.current.querySelectorAll('input'));
+      return inputBoxes.some(input => input.value.length > 0);
+    }
+  });
+  setBoardIsClear(!boardHasContent); // If no content in board, set it as clear
+};
+
+
+const resetGameForTesting = () => {
+  // Cycle through the 7 games
+  const nextIndex = (currentGameIndex + 1) % 7; 
+  setCurrentGameIndex(nextIndex);
+  setChangedLetterIndices([null, null, null, null]);
+  document.querySelectorAll('.shuffle-row input').forEach((item) => {(item as HTMLInputElement).style.backgroundColor = ''})
+  localStorage.setItem('currentGameIndex', nextIndex.toString());
+
+  // Clear the board and reset game state
+  clearBoard();
+  setGameComplete(false);
+
+  // Reset and clear the timer
+  setTimeElapsed(0);
+  localStorage.setItem('gameTime', '0'); 
+
+  // Stop the current timer if it's running
+  if (intervalIdRef.current) {
+    clearInterval(intervalIdRef.current);
+    intervalIdRef.current = null;
+  }
+
+  // Start a new timer
+  intervalIdRef.current = setInterval(() => {
+    setTimeElapsed((prevTime) => {
+      const updatedTime = prevTime + 1;
+      localStorage.setItem('gameTime', updatedTime.toString());
+      return updatedTime;
     });
-    setShowModal(false); // Hide modal if open
-    setInvalidRow(null); // Reset invalid row state
-    setBoardIsClear(true);
-    setActiveRow(1);
-    setChangedLetterIndices([null, null, null, null]);
-    const firstInput = document.querySelector(".shuffle-row input") as HTMLInputElement;
-  
-    if(firstInput) firstInput.focus();
-  };
-
-  const updateBoardClearStatus = () => {
-    const allRows = [rowTwo, rowThree, rowFour];
-    const boardHasContent = allRows.some(row => {
-      if(row.current) {
-        const inputBoxes = Array.from(row.current.querySelectorAll('input'));
-        return inputBoxes.some(input => input.value.length > 0);
-      }
-    });
-    setBoardIsClear(!boardHasContent); // If no content in board, set it as clear
-  };
-
-
-  // Reset the game for testing purposes
-  const resetGameForTesting = () => {
-    const nextIndex = (currentGameIndex + 1) % 7; // Cycle through the 7 games
-    setCurrentGameIndex(nextIndex);
-    localStorage.setItem('currentGameIndex', nextIndex.toString());
-    clearBoard(); // Reset the board
-    setGameComplete(false);
-    setTimeElapsed(0);
-    localStorage.setItem('gameTime', '0'); // Reset timer
-  };
+  }, 1000);
+};
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-start justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -434,7 +452,7 @@ const handleInputChange = async (
                   maxLength={1}
                   minLength={1}
                   data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
+                  className="row-box p-2 border border-s-black bg-slate-400  w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
                   onChange={(e) => handleInputChange(rowThree, 3, e)}
                   onKeyDown={(e) => handleInputDelete(rowThree, e)}
                   disabled={activeRow < 2 || gameComplete}
