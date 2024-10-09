@@ -23,39 +23,54 @@ export default function Home() {
   const [gameComplete, setGameComplete] = useState(false);
 
   const [timeElapsed, setTimeElapsed] = useState(0); // Store time in seconds
+  const [currentGameIndex, setCurrentGameIndex] = useState(0);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
-  const startWord = answerSets[0].start;
-  const endWord = answerSets[0].end;
-
- // Initialize timer on page load or refresh
- useEffect(() => {
-  const savedTime = localStorage.getItem('gameTime');
-  if (savedTime) {
-    setTimeElapsed(parseInt(savedTime));
-  } else {
-    setTimeElapsed(0); // Start timer at 0 if no saved time
-  }
-
-  // Start the timer if not started already
-  if (!intervalIdRef.current) {
-    intervalIdRef.current = setInterval(() => {
-      setTimeElapsed((prevTime) => {
-        const updatedTime = prevTime + 1;
-        localStorage.setItem('gameTime', updatedTime.toString()); // Store the updated time in localStorage
-        return updatedTime;
-      });
-    }, 1000);
-  }
-
-  // Clean up the interval when the component unmounts
-  return () => {
-    if (intervalIdRef.current) {
-      clearInterval(intervalIdRef.current);
-      intervalIdRef.current = null;
-    }
+  const getCurrentGame = () => {
+    return answerSets[currentGameIndex];
   };
-}, []);
+
+  const { start, end } = getCurrentGame();
+
+  useEffect(() => {
+    const savedTime = localStorage.getItem('gameTime');
+    const lastPlayedDate = localStorage.getItem('lastPlayedDate');
+    const savedGameIndex = localStorage.getItem('currentGameIndex');
+    const today = new Date().toDateString();
+
+    // If the user hasn't played today, set the game index based on the current day
+    if (lastPlayedDate !== today) {
+      const dayIndex = new Date().getDate() % 7; // Use the day of the month mod 7 to rotate games
+      setCurrentGameIndex(dayIndex);
+      localStorage.setItem('currentGameIndex', dayIndex.toString());
+      localStorage.setItem('lastPlayedDate', today);
+    } else if (savedGameIndex) {
+      setCurrentGameIndex(parseInt(savedGameIndex));
+    }
+
+    if (savedTime) {
+      setTimeElapsed(parseInt(savedTime));
+    }
+
+    // Start the timer if not started already
+    if (!intervalIdRef.current) {
+      intervalIdRef.current = setInterval(() => {
+        setTimeElapsed((prevTime) => {
+          const updatedTime = prevTime + 1;
+          localStorage.setItem('gameTime', updatedTime.toString()); // Store the updated time in localStorage
+          return updatedTime;
+        });
+      }, 1000);
+    }
+
+    // Clean up the interval when the component unmounts
+    return () => {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
+      }
+    };
+  }, []);
 
 useEffect(() => {
   if (title.current) {
@@ -71,11 +86,11 @@ useEffect(() => {
 }, []);
 
 
-  useEffect(() => {
-    // Lay out the first and last rows with the start and end words
-    displayWord(rowOne, startWord);
-    displayWord(rowFive, endWord);
-  }, []);
+useEffect(() => {
+  // Lay out the first and last rows with the start and end words
+  displayWord(rowOne, start);
+  displayWord(rowFive, end);
+}, [currentGameIndex]);
 
   const displayWord = (rowRef: React.RefObject<HTMLDivElement>, word: string ) => {
     // Split the word into individual characters
@@ -261,7 +276,7 @@ const handleInputChange = async (
         }
 
         // Check if we are on the last row and the word matches the endWord
-        if (rowIndex === 5 && currentWord.toLowerCase() === endWord.toLowerCase()) {
+        if (rowIndex === 5 && currentWord.toLowerCase() === end.toLowerCase()) {
           setShowModal(true); // Show "Puzzle Complete" modal
           setInvalidRow(null);
           setErrorMessage(`Puzzle Completed in ${formatTime(timeElapsed)}!`);
@@ -342,6 +357,18 @@ const handleInputChange = async (
     setBoardIsClear(!boardHasContent); // If no content in board, set it as clear
   };
 
+
+  // Reset the game for testing purposes
+  const resetGameForTesting = () => {
+    const nextIndex = (currentGameIndex + 1) % 7; // Cycle through the 7 games
+    setCurrentGameIndex(nextIndex);
+    localStorage.setItem('currentGameIndex', nextIndex.toString());
+    clearBoard(); // Reset the board
+    setGameComplete(false);
+    setTimeElapsed(0);
+    localStorage.setItem('gameTime', '0'); // Reset timer
+  };
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-start justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center max-w-[400px] w-[90%]">
@@ -355,8 +382,8 @@ const handleInputChange = async (
           </li>
         </ol>
         <div className="puzzle-words">
-        <h4 className="text-xl">START WORD: <span className='text-green-400'>{answerSets[0].start.toUpperCase()}</span></h4>
-        <h4 className="text-xl">END WORD: <span className='text-green-400'>{answerSets[0].end.toUpperCase()}</span></h4>
+        <h4 className="text-xl">START WORD: <span className='text-green-400'>{start}</span></h4>
+        <h4 className="text-xl">END WORD: <span className='text-green-400'>{end}</span></h4>
         </div>
         <p>Time Elapsed: {formatTime(timeElapsed)}</p> {/* Timer display */}
         <div className="flex gap-4 items-center flex-col sm:flex-row m-auto w-full max-w-[400px]">
@@ -463,6 +490,13 @@ const handleInputChange = async (
           className={`${gameComplete ? '' : 'hidden'} text-yellow-400`}
           >Come back tomorrow for another round. Everyday I'm shuffling!</h3>
         </div>
+
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+          onClick={resetGameForTesting}
+        >
+          Next Game (Test Mode)
+        </button>
       </main>
     </div>
   );
