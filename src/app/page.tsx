@@ -161,7 +161,7 @@ const highlightChangedLetter = (
     const currentRowBoxes = Array.from(rowRef.current.children) as HTMLInputElement[]; // Cast to HTMLInputElement[]
     
     if (currentRowBoxes[changedIndex]) {
-      currentRowBoxes[changedIndex].style.backgroundColor = 'orange';
+      currentRowBoxes[changedIndex].classList.add('bg-orange-300');
     }
 
     // Update the changedLetterIndices array
@@ -184,6 +184,7 @@ const handleInputDelete = (rowRef: React.RefObject<HTMLDivElement>, event: React
 
     // Handle backspace key press
     if (event.key === 'Backspace' && target.value === '' && currentIndex > 0) {
+      inputBoxes[currentIndex].classList.remove("bg-orange-300")
       const prevInput = inputBoxes[currentIndex - 1];
       if (prevInput) {
         prevInput.focus(); // Move to the previous input box
@@ -324,6 +325,15 @@ const handleInputChange = async (
       inputBoxes.forEach(input => input.value = ''); // Clear the input values
       inputBoxes[0].focus(); // Set focus to the first input again
       unsetHighlightErrorRow(inputBoxes);
+
+      setChangedLetterIndices((prev) => {
+        const newIndices = [...prev];
+        const rowIndex = invalidRow  - 2 ;
+        console.log("rowIndex", rowIndex);
+        newIndices[rowIndex] = null;
+        console.log("newIndices", newIndices)
+        return newIndices;
+      });
     }
     setInvalidRow(null);
   };
@@ -333,7 +343,7 @@ const handleInputChange = async (
     [rowTwo, rowThree, rowFour, rowFive].forEach(row => {
       if(row.current) {
         const inputBoxes: HTMLInputElement[] = Array.from(row.current.querySelectorAll('input'));
-        inputBoxes.forEach(input => {input.value = ''; input.classList.add("bg-slate-400")}); // Clear all input fields
+        inputBoxes.forEach(input => {input.value = ''; input.classList.add("bg-slate-400"); input.classList.remove("bg-orange-300")});
       }
     });
     setShowModal(false); // Hide modal if open
