@@ -7,7 +7,8 @@ import { TextPlugin } from 'gsap/TextPlugin';
 export default function Home() {
   gsap.registerPlugin(TextPlugin);
 
-  const title = useRef<HTMLHeadingElement>(null)
+  const title = useRef<HTMLHeadingElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
   const rowOne = useRef<HTMLDivElement>(null);
   const rowTwo = useRef<HTMLDivElement>(null);
   const rowThree = useRef<HTMLDivElement>(null);
@@ -17,7 +18,7 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const [invalidRow, setInvalidRow] = useState<number | null>(null);
   const [boardIsClear, setBoardIsClear] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("Error message");
   const [activeRow, setActiveRow] = useState(1);
   const [changedLetterIndices, setChangedLetterIndices] = useState<(number | null)[]>([null, null, null, null]);
   const [gameComplete, setGameComplete] = useState(false);
@@ -73,14 +74,29 @@ export default function Home() {
   }, []);
 
 useEffect(() => {
+  if (mainRef.current) {
+    gsap.fromTo(mainRef.current, 
+      {
+        y:20,
+        opacity: 0
+      },
+      {
+      y:0,
+      opacity: 1,
+      duration: 2,
+      ease: "power2.inOut",
+    });
+  }
   if (title.current) {
-    gsap.to(title.current, {
+    gsap.to(title.current, 
+      {
+      delay: 2,
       text: "SHUFFLE WORD",
       duration: 2,
       stagger: {
         from: "start",
         amount: 0.1},
-      ease: "power2.in",
+      ease: "power2.inOut",
     });
   }
 }, []);
@@ -403,107 +419,107 @@ const resetGameForTesting = () => {
 };
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-start justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center max-w-[400px] w-[90%]">
-       <h1 className='text-orange-300' ref={title}>WSUFLEO RDFH</h1>
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Turn the START word at the top into the END word at the bottom in 4 moves.
-          </li>
-          <li className="mb-2">
-            You can only change one letter per row. The new word must be in the english dictionary at each stage to be valid.
-          </li>
-        </ol>
-        <div className="puzzle-words">
-        <h4 className="text-xl">START WORD: <span className='text-green-400'>{start}</span></h4>
-        <h4 className="text-xl">END WORD: <span className='text-green-400'>{end}</span></h4>
-        </div>
-        <p>Time Elapsed: <span className="neon-clock text-green-400">{formatTime(timeElapsed)}</span></p> {/* Timer display */}
-        <div className="flex gap-4 items-center flex-col sm:flex-row m-auto w-full max-w-[400px]">
-          <div className="shuffle-grid grid grid-cols-1 grid-rows-5">
-            <div ref={rowOne} className="shuffle-row w-full flex">
-              {Array(5).fill(null).map((_, index) => (
-                <div
-                  key={index}
-                  className="row-box p-2 border border-s-black bg-green-400 w-[20%] text-center text-2xl font-extrabold capitalize"
-                ></div>
-              ))}
-            </div>
-            <div ref={rowTwo} className="shuffle-row">
-              {Array(5).fill(null).map((_, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  maxLength={1}
-                  minLength={1}
-                  data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
-                  onChange={(e) => handleInputChange(rowTwo, 2, e)}
-                  onKeyDown={(e) => handleInputDelete(rowTwo, e)}
-                  disabled={activeRow < 1 || gameComplete}
-                />
-              ))}
-            </div>
-            <div ref={rowThree} className="shuffle-row">
-              {Array(5).fill(null).map((_, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  maxLength={1}
-                  minLength={1}
-                  data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400  w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
-                  onChange={(e) => handleInputChange(rowThree, 3, e)}
-                  onKeyDown={(e) => handleInputDelete(rowThree, e)}
-                  disabled={activeRow < 2 || gameComplete}
-                />
-              ))}
-            </div>
-            <div ref={rowFour} className="shuffle-row">
-              {Array(5).fill(null).map((_, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  maxLength={1}
-                  minLength={1}
-                  data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
-                  onChange={(e) => handleInputChange(rowFour, 4, e)}
-                  onKeyDown={(e) => handleInputDelete(rowFour, e)}
-                  disabled={activeRow < 3 || gameComplete}
-                />
-              ))}
-            </div>
-            <div ref={rowFive} className="shuffle-row">
-              {Array(5).fill(null).map((_, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  maxLength={1}
-                  minLength={1}
-                  data-index={index}
-                  className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
-                  onChange={(e) => handleInputChange(rowFive, 5, e)}
-                  onKeyDown={(e) => handleInputDelete(rowFive, e)}
-                  disabled={activeRow < 4 || gameComplete}
-                />
-              ))}
-            </div>
-
+    <div ref={mainRef} className="grid grid-rows-[20px_1fr_20px] items-start justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] lg:flex lg:justify-center lg:items-center l">
+      <main  className="flex flex-col gap-8 row-start-2 items-center max-w-[400px] w-[90%] lg:flex-row lg:max-w-[900px]">
+        <div className="instructions flex flex-col gap-4 justify-center items-center lg:items-start lg:self-start">
+          <h1 className='text-orange-300' ref={title}>WSUFLEO RDFH</h1>
+          <ol  className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
+            <li className="mb-2">
+              Turn the START word at the top into the END word at the bottom in 4 moves.
+            </li>
+            <li className="mb-2">
+              You can only change one letter per row. The new word must be in the english dictionary at each stage to be valid.
+            </li>
+          </ol>
+          <div className="puzzle-words">
+            <h4 className="text-xl">START WORD: <span className='text-green-400'>{start.toUpperCase()}</span></h4>
+            <h4 className="text-xl">END WORD: <span className='text-green-400'>{end.toUpperCase()}</span></h4>
           </div>
+          <p>Time Elapsed: <span className="neon-clock text-green-400 text-center">{formatTime(timeElapsed)}</span></p>        
         </div>
-
-        {showModal && (
-          <div className="modal self-center">
-            <div className="modal-content flex flex-col ">
-              <p>{errorMessage}</p>
+        <div className="board flex flex-col gap-4">
+          <div className="flex gap-4 items-center flex-col sm:flex-row m-auto w-full max-w-[500px]">
+            <div className="shuffle-grid grid grid-cols-1 grid-rows-5">
+              <div ref={rowOne} className="shuffle-row w-full flex">
+                {Array(5).fill(null).map((_, index) => (
+                  <div
+                    key={index}
+                    className="row-box p-2 border border-s-black bg-green-400 w-[20%] text-center text-2xl font-extrabold capitalize"
+                  ></div>
+                ))}
+              </div>
+              <div ref={rowTwo} className="shuffle-row">
+                {Array(5).fill(null).map((_, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    maxLength={1}
+                    minLength={1}
+                    data-index={index}
+                    className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
+                    onChange={(e) => handleInputChange(rowTwo, 2, e)}
+                    onKeyDown={(e) => handleInputDelete(rowTwo, e)}
+                    disabled={activeRow < 1 || gameComplete}
+                  />
+                ))}
+              </div>
+              <div ref={rowThree} className="shuffle-row">
+                {Array(5).fill(null).map((_, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    maxLength={1}
+                    minLength={1}
+                    data-index={index}
+                    className="row-box p-2 border border-s-black bg-slate-400  w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
+                    onChange={(e) => handleInputChange(rowThree, 3, e)}
+                    onKeyDown={(e) => handleInputDelete(rowThree, e)}
+                    disabled={activeRow < 2 || gameComplete}
+                  />
+                ))}
+              </div>
+              <div ref={rowFour} className="shuffle-row">
+                {Array(5).fill(null).map((_, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    maxLength={1}
+                    minLength={1}
+                    data-index={index}
+                    className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
+                    onChange={(e) => handleInputChange(rowFour, 4, e)}
+                    onKeyDown={(e) => handleInputDelete(rowFour, e)}
+                    disabled={activeRow < 3 || gameComplete}
+                  />
+                ))}
+              </div>
+              <div ref={rowFive} className="shuffle-row">
+                {Array(5).fill(null).map((_, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    maxLength={1}
+                    minLength={1}
+                    data-index={index}
+                    className="row-box p-2 border border-s-black bg-slate-400 w-[20%] text-center font-extrabold text-2xl  focus:bg-slate-600 capitalize"
+                    onChange={(e) => handleInputChange(rowFive, 5, e)}
+                    onKeyDown={(e) => handleInputDelete(rowFive, e)}
+                    disabled={activeRow < 4 || gameComplete}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className={`modal self-center ${showModal ? 'visible' : 'invisible'}`}>
+            <div className="modal-content flex items-center justify-center ">
+              <p className="font-[family-name:var(--font-geist-mono)]">{errorMessage}</p>
               <button        className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 font-extrabold  w-fit m-auto mt-5
           ${boardIsClear ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#383838] dark:hover:bg-[#ccc]'} 
           ${gameComplete ? 'hidden' : ''} 
           ${!boardIsClear ? 'glow-effect' : ''}
           ${activeRow === 5 ? 'hidden' : ''}`} 
         
-               onClick={() => {
+              onClick={() => {
                 if (invalidRow !== null) {
                   const rowRef = getRowRef(invalidRow - 1);
                   if (rowRef && rowRef.current) {
@@ -514,31 +530,31 @@ const resetGameForTesting = () => {
               >Dismiss</button>
             </div>
           </div>
-        )}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row self-center">
-          <div className="flex gap-3 items-center justify-center">
+          <div className="flex gap-4 items-center flex-col sm:flex-row self-center">
+            <div className="flex gap-3 items-center justify-center">
+            <button
+            className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 text-xs sm:text-base h-10 sm:h-12 px-4 sm:px-5 font-extrabold
+            ${boardIsClear ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#383838] dark:hover:bg-[#ccc]'} 
+            ${gameComplete ? 'hidden' : ''} 
+            ${!boardIsClear ? 'glow-effect' : ''}`} 
+            onClick={clearBoard}
+            disabled={boardIsClear}
+          >
+            Clear Board
+          </button>
           <button
-          className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 font-extrabold
-          ${boardIsClear ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#383838] dark:hover:bg-[#ccc]'} 
-          ${gameComplete ? 'hidden' : ''} 
-          ${!boardIsClear ? 'glow-effect' : ''}`} 
-          onClick={clearBoard}
-          disabled={boardIsClear}
-        >
-          Clear Board
-        </button>
-        <button
-          className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-orange-300 text-background gap-2 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 font-extrabold   ${!boardIsClear ? 'glow-effect' : ''}`}
-          onClick={resetGameForTesting}
-        >
-          Next Game (Test Mode)
-        </button>
-          </div>
+            className={`rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-orange-300 text-background gap-2 text-xs sm:text-base h-10 sm:h-12 px-4 sm:px-5 font-extrabold   ${!boardIsClear ? 'glow-effect' : ''}`}
+            onClick={resetGameForTesting}
+          >
+            Next Game (Test Mode)
+          </button>
+            </div>
 
-          <h3
-          className={`${gameComplete ? '' : 'hidden'} text-yellow-400`}
-          >Come back tomorrow for another round. Everyday I'm shuffling!</h3>
+            <h3
+            className={`${gameComplete ? '' : 'hidden'} text-yellow-400`}
+            >Come back tomorrow for another round. Everyday I'm shuffling!</h3>
+          </div>     
         </div>
       </main>
     </div>
